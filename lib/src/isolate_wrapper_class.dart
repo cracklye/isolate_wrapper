@@ -2,9 +2,6 @@ import 'dart:isolate';
 
 import 'package:flutter/widgets.dart';
 import 'package:isolate_wrapper/isolate_wrapper.dart';
-import 'package:isolate_wrapper/src/isolate_error.dart';
-import 'package:isolate_wrapper/src/isolate_message.dart';
-import 'package:isolate_wrapper/src/isolate_progress.dart';
 
 class IsolateWrapper<T> {
   /// this function is the function that will run within the
@@ -12,8 +9,21 @@ class IsolateWrapper<T> {
   final Function(SendPort) processFunction;
   final String? description;
 
+  final Function(IsolateProgress)? handleProgress;
+  final Function(T)? handleResult;
+  final Function(IsolateError)? handleError;
+  final Function()? handleComplete;
+  final bool runOnce;
 
-  IsolateWrapper(this.processFunction, [this.description]) : id = UniqueKey().toString();
+  IsolateWrapper(this.processFunction,
+      {this.handleProgress,
+      this.handleResult,
+      this.handleError,
+      this.handleComplete,
+      this.runOnce = false,
+      String? customId,
+      this.description})
+      : id = customId ?? UniqueKey().toString();
 
   ReceivePort? _receiveFromPort;
   //SendPort sendThis;
@@ -29,7 +39,25 @@ class IsolateWrapper<T> {
 
   /// configures the initial ports that are required.
 
-  Future setup() async {
+  // Future setup() async {
+
+  // }
+
+  Future<void> run([Map<String, Object> parameters = const {}]) async {
+    await _run(
+        handleError: handleError,
+        handleProgress: handleProgress,
+        handleResult: handleResult,
+        parameters: parameters,
+        runOnce: runOnce);
+  }
+
+  Future _run(
+      {bool runOnce = false,
+      Function(IsolateProgress)? handleProgress,
+      Function(T)? handleResult,
+      Function(IsolateError)? handleError,
+      Map<String, Object> parameters = const {}}) async {
     /// Where I listen to the message from Mike's port
     _receiveFromPort = ReceivePort();
 
@@ -43,27 +71,7 @@ class IsolateWrapper<T> {
 
     /// I set up another receivePort to receive Mike's response.
     _receiveFromRemote = ReceivePort();
-  }
 
-  Future run(
-      {Function(IsolateProgress)? handleProgress,
-      Function(T)? handleResult,
-      Function(IsolateError)? handleError,
-      Map<String, Object> parameters = const {}}) async {
-    await _run(
-        handleError: handleError,
-        handleProgress: handleProgress,
-        handleResult: handleResult,
-        parameters: parameters,
-        runOnce: false);
-  }
-
-  Future _run(
-      {bool runOnce = false,
-      Function(IsolateProgress)? handleProgress,
-      Function(T)? handleResult,
-      Function(IsolateError)? handleError,
-      Map<String, Object> parameters = const {}}) async {
     /// I send Mike a message using mikeSendPort. I send him a list,
     /// which includes my message, preferred type of coffee, and finally
     /// a sendPort from mikeResponseReceivePort that enables Mike to send a message back to me.
@@ -108,11 +116,9 @@ class IsolateWrapper<T> {
     _sendToRemote!.send(message);
   }
 
-  Future<T?> runForResult(
-      {Function(IsolateProgress)? handleProgress,
-      Map<String, Object> parameters = const {}}) async {
-    T? rtn = null;
-    Object? exception = null;
+  Future<T?> runForResult({Map<String, Object> parameters = const {}}) async {
+    T? rtn;
+    Object? exception;
 
     await _run(
         runOnce: true,
@@ -130,6 +136,9 @@ class IsolateWrapper<T> {
   }
 
   Future stop() async {
+    if (handleComplete != null) {
+      handleComplete!();
+    }
     if (_receiveFromRemote != null) {
       _receiveFromRemote!.close();
     }

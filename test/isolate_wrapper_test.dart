@@ -28,7 +28,8 @@ void main() {
     });
 
     test('Gets created with description', () async {
-      var isolate = IsolateWrapper(handleEchoWaitForInit, "A Test Description");
+      var isolate = IsolateWrapper(handleEchoWaitForInit,
+          description: "A Test Description");
       expect(isolate.id, isNotNull);
       expect(isolate.description, "A Test Description");
 
@@ -37,13 +38,14 @@ void main() {
   });
   group('run', () {
     test('adds one to input values', () async {
-      var isolate = IsolateWrapper(handleEchoWaitForInit);
-      await isolate.setup();
-      await isolate.run(
-          handleProgress: (message) => print('TEST: handle message($message)'),
-          handleResult: (message) => print('TEST: handle result($message)'),
-          handleError: (message) => print('TEST: handle error($message)'),
-          parameters: paraemters);
+      var isolate = IsolateWrapper(
+        handleEchoWaitForInit,
+        handleProgress: (message) => print('TEST: handle message($message)'),
+        handleResult: (message) => print('TEST: handle result($message)'),
+        handleError: (message) => print('TEST: handle error($message)'),
+      );
+
+      await isolate.run(paraemters);
 
       //We want to run for a while
       for (int i = 0; i < 2; i++) {
@@ -54,27 +56,27 @@ void main() {
     });
 
     test('continue recieving messages after error', () async {
-      var isolate = IsolateWrapper(handleEchoWithError);
-      await isolate.setup();
-
       int messageCount = 0;
       int resultCount = 0;
       int errorCount = 0;
 
-      await isolate.run(
-          handleProgress: (message) {
-            print('TEST: handle message($message)');
-            messageCount += 1;
-          },
-          handleResult: (message) {
-            print('TEST: handle result($message)');
-            resultCount += 1;
-          },
-          handleError: (message) {
-            print('TEST: handle error($message)');
-            errorCount += 1;
-          },
-          parameters: paraemters);
+      var isolate = IsolateWrapper(
+        handleEchoWithError,
+        handleProgress: (message) {
+          print('TEST: handle message($message)');
+          messageCount += 1;
+        },
+        handleResult: (message) {
+          print('TEST: handle result($message)');
+          resultCount += 1;
+        },
+        handleError: (message) {
+          print('TEST: handle error($message)');
+          errorCount += 1;
+        },
+      );
+
+      await isolate.run(paraemters);
 
       //We want to run for a while
       for (int i = 0; i < 2; i++) {
@@ -89,28 +91,28 @@ void main() {
     });
 
     test('reciever gets mutliple messages', () async {
-      var isolate = IsolateWrapper(handleEcho);
-      await isolate.setup();
-
       int messageCount = 0;
       int resultCount = 0;
       int errorCount = 0;
 
-      await isolate.run(
-          handleProgress: (message) {
-            print('TEST: handle message($message)');
-            messageCount += 1;
-          },
-          handleResult: (message) {
-            print('TEST: handle result($message)');
-            resultCount += 1;
-          },
-          handleError: (message) {
-            print('TEST: handle error($message)');
+      var isolate = IsolateWrapper(
+        handleEcho,
+        handleProgress: (message) {
+          print('TEST: handle message($message)');
+          messageCount += 1;
+        },
+        handleResult: (message) {
+          print('TEST: handle result($message)');
+          resultCount += 1;
+        },
+        handleError: (message) {
+          print('TEST: handle error($message)');
 
-            errorCount += 1;
-          },
-          parameters: paraemters);
+          errorCount += 1;
+        },
+      );
+
+      await isolate.run(paraemters);
 
       //We want to run for a while
       for (int i = 0; i < 5; i++) {
@@ -125,15 +127,15 @@ void main() {
       await isolate.stop();
     });
     test('reciever gets mutliple results', () async {
-      var isolate = IsolateWrapper(handleEchoMultipleResults);
-      await isolate.setup();
-
       int resultCount = 0;
-      await isolate.run(
+      var isolate = IsolateWrapper(
+        handleEchoMultipleResults,
         handleResult: (message) {
           resultCount += 1;
         },
       );
+
+      await isolate.run();
 
       //We want to run for a while
       for (int i = 0; i < 5; i++) {
@@ -148,13 +150,13 @@ void main() {
   group("runForResult", () {
     test('returns result successully in init', () async {
       var isolate = IsolateWrapper<String>(handleSendResultInit);
-      await isolate.setup();
+
       String? res = await isolate.runForResult();
       expect(res, "Result1");
     });
     test('returns error successully in init', () async {
       var isolate = IsolateWrapper<String>(handleSendErrorInit);
-      await isolate.setup();
+
       try {
         String? res = await isolate.runForResult();
         expect(false, true);
@@ -167,7 +169,7 @@ void main() {
 
     test('fails when no init is provided with run for result....', () async {
       var isolate = IsolateWrapper<String>(handleSendErrorMessage);
-      await isolate.setup();
+
       try {
         String? res = await isolate.runForResult();
         expect(false, true);
@@ -180,7 +182,6 @@ void main() {
     test('fails when init and onMessage is provided with run for result....',
         () async {
       var isolate = IsolateWrapper<String>(handleEchoWaitForInit);
-      await isolate.setup();
       try {
         String? res = await isolate.runForResult();
         expect(false, true);
@@ -194,12 +195,15 @@ void main() {
 
     test('Stops on result', () async {
       var isolate = IsolateWrapper<String>(handleSendResultMultipleTimes);
-      await isolate.setup();
+      
       expect(await isolate.runForResult(), "Result1");
       expect(isolate.isComplete, true);
       expect(isolate.isRunning, false);
     });
   });
+
+
+
 }
 
 void handleSendResultMultipleTimes(SendPort sendPort) async {
