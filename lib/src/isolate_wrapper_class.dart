@@ -215,9 +215,10 @@ class IsolateWrapperReciever {
     }
   }
 
-  void sendProgress(String message, [int progress = 0]) {
+  void sendProgress(String message, {int progress = 0, dynamic value}) {
     if (_sendPortToRemote != null) {
-      _sendPortToRemote!.send(IsolateProgress(message, progress));
+      _sendPortToRemote!
+          .send(IsolateProgress(message, progress: progress, value: value));
     } else {
       throw Exception("Unable to send message as the sendPortToRemote is null");
     }
