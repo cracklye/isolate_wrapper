@@ -54,14 +54,14 @@ void handleSendResultFast(SendPort sendPort) async {
   var reciever = IsolateWrapperReciever(
     sendPort,
     onInit: (dynamic message, reciever) async {
-      reciever.sendProgress("Have initialised", 2);
+      reciever.sendProgress("Have initialised", progress: 2);
 
       for (int i = 2; i < 10; i++) {
         await Future.delayed(const Duration(milliseconds: 80));
-        reciever.sendProgress("Updated process to stage $i", i * 10);
+        reciever.sendProgress("Updated process to stage $i", progress: i * 10);
       }
 
-      reciever.sendProgress("Cleaning up process", 90);
+      reciever.sendProgress("Cleaning up process", progress: 90);
       reciever.sendResult("Completed The Result");
       
     },
@@ -73,13 +73,13 @@ void handleSendResultSlow(SendPort sendPort) async {
   var reciever = IsolateWrapperReciever(
     sendPort,
     onInit: (dynamic message, reciever) async {
-      reciever.sendProgress("Have initialised", 2);
+      reciever.sendProgress("Have initialised", progress: 2);
       for (int i = 2; i < 10; i++) {
         await Future.delayed(const Duration(seconds: 2));
-        reciever.sendProgress("Updated process to stage $i", i * 10);
+        reciever.sendProgress("Updated process to stage $i", progress: i * 10);
       }
 
-      reciever.sendProgress("Cleaning up process", 90);
+      reciever.sendProgress("Cleaning up process",progress:  90);
       reciever.sendResult("All Done");
     },
   );
@@ -91,13 +91,13 @@ void handleSendResultSuperSlow(SendPort sendPort) async {
   var reciever = IsolateWrapperReciever(
     sendPort,
     onInit: (dynamic message, reciever) async {
-      reciever.sendProgress("Have initialised", 2);
+      reciever.sendProgress("Have initialised", progress: 2);
       for (int i = 2; i < 10; i++) {
         await Future.delayed(const Duration(seconds: 10));
-        reciever.sendProgress("Updated process to stage $i", i * 10);
+        reciever.sendProgress("Updated process to stage $i",progress:  i * 10);
       }
 
-      reciever.sendProgress("Cleaning up process", 90);
+      reciever.sendProgress("Cleaning up process",progress:  90);
       reciever.sendResult("All Done");
     },
   );
